@@ -38,8 +38,15 @@ app.configure(function() {
 	app.use(lowerCaseQuery);
 	app.use('/aria', express.static(__dirname + '/aria'));
 	app.use('/dev', express.static(__dirname + '/dev'));
-	app.use(express.static(__dirname + '/public'));
+	app.use(express.static(__dirname + '/static'));
 });
+
+/*
+ * Default landing page
+ */
+app.get('/', function (req, res) {
+	res.sendfile('index.html');
+})
 
 /*
  * Open-source build getter

@@ -42,13 +42,6 @@ app.configure(function() {
 });
 
 /*
- * Default landing page
- */
-app.get('/', function (req, res) {
-	res.sendfile('index.html');
-})
-
-/*
  * Open-source build getter
  *
  * /ariatemplates-<x.y.z>.js[?<params>]
@@ -117,12 +110,11 @@ var getFwk = function (res, suffix, version, dev, skin) {
 	var filename = suffix + version + '.js';
 
 	if (cache[filename]) {
-		debugger
-		console.log('using cache for ' + filename);
+		// console.log('using cache for ' + filename);
 		sendFwk(res, cache[filename], version, dev, skin)
 	} else {
 		var fwkfile = (dev ? config.PATH_TO_DEV_FWK + version + '/aria/' : config.PATH_TO_MIN_FWK) + filename;
-		console.log('looking for ' + fwkfile);
+		// console.log('looking for ' + fwkfile);
 		fs.exists(fwkfile, function (exists) {
 			if (exists) {
 				fs.readFile(fwkfile, function (err, data) {
@@ -153,12 +145,12 @@ var sendFwk = function (res, content, version, dev, skin) {
 
 	// prepare buffers
 	if (dev) {
-		console.log('using dev')
+		// console.log('using dev');
 		var bufDev = new Buffer('document.write("<script>___baseURL___=\'' + url + '/\'</script>");', 'utf-8');
 		l += bufDev.length;
 	}
 	if (skin) {
-		console.log('using skin')
+		// console.log('using skin');
 		var bufSkin = new Buffer('document.write(\'<script src="'+ url + '/aria/css/atskin-' + version + '.js"><\/script>\');', 'utf-8');
 		l += bufSkin.length;
 	}
@@ -197,6 +189,13 @@ app.get('/updateconfig', function (req, res) {
 		console.log('Remote attempt at updating the configuration from ' + req.ip);
 		res.send(404);
 	}
+});
+
+/*
+ * Anything that hasn't been routed at this point is a 404
+ */
+app.get('*', function(req, res) {
+	res.status(404).sendfile(__dirname + '/static/404.html');
 });
 
 

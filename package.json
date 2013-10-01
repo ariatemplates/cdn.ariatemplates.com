@@ -1,0 +1,13 @@
+{
+	"name" : "cdn.ariatemplates.com",
+	"version" : "1.0.0",
+	"description" : "Simple CORS based CDN for Aria Templates",
+	"repository" : {
+		"type": "git",
+		"url": "git://github.com/ariatemplates/cdn.ariatemplates.com.git"
+	},
+	"dependencies" : {
+		"express" : ">=3.4.0"
+	},
+	"private" : true
+}

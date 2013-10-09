@@ -5,10 +5,10 @@ body {
 	background: #f8f8f8;
 }
 h1 {
-	margin: 50px 0 30px 0;
+	margin: 40px 0 20px 0;
 	color: #5092BD
 }
-.code {
+.code, dt {
 	font-family: monospace;
 	color: white;
 	background: #333;
@@ -20,4 +20,17 @@ h1 {
 }
 .option {
 	color: #6bdcff;
+}
+dt {
+	color: #666;
+	display: list-item;
+	float: left;
+	margin-left: 70px;
+}
+dd {
+	margin: 0 0 10px 130px;
+}
+.warn {
+	background: #fcffb7;
+	padding: 5px;
 }

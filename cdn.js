@@ -51,7 +51,7 @@ app.configure(function() {
  * - skin (serve skin, default does not)
  */
 app.get(/^\/ariatemplates-(\d\.\d\.\d{1,2})\.js/, function (req, res) {
-	getFwk(res, 'ariatemplates-', req.params[0], req.query.dev != undefined, req.query.skin != undefined);
+	getFwk(req, res, 'ariatemplates-', req.params[0]);
 });
 
 /*
@@ -64,7 +64,7 @@ app.get(/^\/ariatemplates-(\d\.\d\.\d{1,2})\.js/, function (req, res) {
  * - skin (serve skin, default does not)
  */
 app.get(/^\/aria-templates-(\d\.\d\-\d{1,2}[a-zA-Z]?)\.js/, function (req, res) {
-	getFwk(res, 'aria-templates-', req.params[0], req.query.dev != undefined, req.query.skin != undefined);
+	getFwk(req, res, 'aria-templates-', req.params[0]);
 });
 
 /*
@@ -80,11 +80,10 @@ app.get(/^\/aria-templates-(\d\.\d\-\d{1,2}[a-zA-Z]?)\.js/, function (req, res) 
 app.get(/^\/at(\d)[\-\.]?(\d)[\-\.]?(\d{1,2})([a-zA-Z]?)\.js/, function (req, res) {
 	var amadeus = req.query['1a'] != undefined;
 	getFwk(
-		res, // res
-		amadeus ? 'aria-templates-' : 'ariatemplates-', // suffix
-		req.params[0] + '.' + req.params[1] + (amadeus ? '-' : '.') + req.params[2] + req.params[3], // version
-		req.query.dev != undefined, // dev?
-		req.query.skin != undefined // skin?
+		req,
+		res,
+		amadeus ? 'aria-templates-' : 'ariatemplates-', // prefix
+		req.params[0] + '.' + req.params[1] + (amadeus ? '-' : '.') + req.params[2] + req.params[3] // version
 	);
 });
 
@@ -94,24 +93,27 @@ app.get(/^\/at(\d)[\-\.]?(\d)[\-\.]?(\d{1,2})([a-zA-Z]?)\.js/, function (req, re
 app.get('/atlatest.js', function (req, res) {
 	var amadeus = req.query['1a'] != undefined;
 	getFwk(
-		res, // res
-		amadeus ? 'aria-templates-' : 'ariatemplates-', // suffix
-		config.LATEST.substr(0,1) + '.' + config.LATEST.substr(1,1) + (amadeus ? '-' : '.') + config.LATEST.substr(2), // version
-		req.query.dev != undefined, // dev?
-		req.query.skin != undefined // skin?
+		req,
+		res,
+		amadeus ? 'aria-templates-' : 'ariatemplates-', // prefix
+		config.LATEST.substr(0,1) + '.' + config.LATEST.substr(1,1) + (amadeus ? '-' : '.') + config.LATEST.substr(2) // version
 	);
 })
 
 /*
  * Retrieve the content of the bootstrap file from disk or cache
  */
-var getFwk = function (res, suffix, version, dev, skin) {
+var getFwk = function (req, res, prefix, version) {
+	var dev = req.query.dev != undefined;
+	var skin = req.query.skin != undefined;
+	var root = req.query.root ? escape(req.query.root) : '';
+
 	var cache = dev ? fwkdevcache : fwkcache;
-	var filename = suffix + version + '.js';
+	var filename = prefix + version + '.js';
 
 	if (cache[filename]) {
 		// console.log('using cache for ' + filename);
-		sendFwk(res, cache[filename], version, dev, skin)
+		sendFwk(res, cache[filename], version, dev, skin, root)
 	} else {
 		var fwkfile = (dev ? config.PATH_TO_DEV_FWK + version + '/aria/' : config.PATH_TO_MIN_FWK) + filename;
 		// console.log('looking for ' + fwkfile);
@@ -124,7 +126,7 @@ var getFwk = function (res, suffix, version, dev, skin) {
 					}
 					else {
 						cache[filename] = data;
-						sendFwk(res, data, version, dev, skin);
+						sendFwk(res, data, version, dev, skin, root);
 					}
 				});
 			}
@@ -139,7 +141,7 @@ var getFwk = function (res, suffix, version, dev, skin) {
 /*
  * Send the content of the bootstrap along with the necessary JS lines to add skin, change dev url, update transport, update the root map.
  */
-var sendFwk = function (res, content, version, dev, skin) {
+var sendFwk = function (res, content, version, dev, skin, root) {
 	var l = content.length;
 	var url = config.CDN_URL + (dev ? '/dev/' + version : '');
 
@@ -154,7 +156,7 @@ var sendFwk = function (res, content, version, dev, skin) {
 		var bufSkin = new Buffer('document.write(\'<script src="'+ url + '/aria/css/atskin-' + version + '.js"><\/script>\');', 'utf-8');
 		l += bufSkin.length;
 	}
-	var bufFix = new Buffer('document.write("<script>aria.core.IO.updateTransports({\'crossDomain\' : \'aria.core.transport.XHR\'});aria.core.DownloadMgr.updateRootMap({\'aria\' : \'' + url + '/\',	\'*\' : \'\'});</script>");', 'utf-8');
+	var bufFix = new Buffer('document.write("<script>aria.core.IO.updateTransports({\'crossDomain\' : \'aria.core.transport.XHR\'});aria.core.DownloadMgr.updateRootMap({\'aria\' : \'' + url + '/\',	\'*\' : \'' + root + '\'});</script>");', 'utf-8');
 	l += bufFix.length;
 
 	var r = new Buffer(l), offset = 0;

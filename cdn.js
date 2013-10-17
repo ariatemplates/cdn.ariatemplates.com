@@ -33,12 +33,25 @@ var lowerCaseQuery = function (req, res, next) {
 	next();
 }
 
+/*
+ * Makes sur each path in the array has a trailing /
+ */
+var normalizePaths = function(paths) {
+	for (var p in paths) {
+		if (paths[p][paths[p].length-1] != '/') paths[p] += '/';
+	}
+}
+
+/*
+ * App environments configuration
+ */
 app.configure(function() {
 	app.use(allowCrossDomain);
 	app.use(lowerCaseQuery);
 	app.use('/aria', express.static(__dirname + '/aria'));
 	app.use('/dev', express.static(__dirname + '/dev'));
 	app.use(express.static(__dirname + '/static'));
+	normalizePaths(config.path);
 });
 
 /*
@@ -106,7 +119,12 @@ app.get('/atlatest.js', function (req, res) {
 var getFwk = function (req, res, prefix, version) {
 	var dev = req.query.dev != undefined;
 	var skin = req.query.skin != undefined;
-	var root = req.query.root ? escape(req.query.root) : '';
+	var root = '/';
+
+	if (req.query.root) {
+		root = escape(req.query.root);
+		if (root[root.length-1] != '/') root += '/';
+	}
 
 	var cache = dev ? fwkdevcache : fwkcache;
 	var filename = prefix + version + '.js';
@@ -115,7 +133,7 @@ var getFwk = function (req, res, prefix, version) {
 		// console.log('using cache for ' + filename);
 		sendFwk(res, cache[filename], version, dev, skin, root)
 	} else {
-		var fwkfile = (dev ? config.PATH_TO_DEV_FWK + version + '/aria/' : config.PATH_TO_MIN_FWK) + filename;
+		var fwkfile = (dev ? config.path.DEV_FWK + version + '/aria/' : config.path.MIN_FWK) + filename;
 		// console.log('looking for ' + fwkfile);
 		fs.exists(fwkfile, function (exists) {
 			if (exists) {
@@ -132,7 +150,7 @@ var getFwk = function (req, res, prefix, version) {
 			}
 			else {
 				console.log('file ' + fwkfile + ' not found');
-				res.send(404);
+				res.status(404).sendfile(__dirname + '/static/404.html');
 			}
 		});		
 	}
@@ -143,20 +161,22 @@ var getFwk = function (req, res, prefix, version) {
  */
 var sendFwk = function (res, content, version, dev, skin, root) {
 	var l = content.length;
-	var url = config.CDN_URL + (dev ? '/dev/' + version : '');
+	var url = config.path.CDN_URL;
 
 	// prepare buffers
 	if (dev) {
-		// console.log('using dev');
-		var bufDev = new Buffer('document.write("<script>___baseURL___=\'' + url + '/\'</script>");', 'utf-8');
+		// 1A build uses rootFolderPath to fetch its primary dependencies so we temporarily set it to the CDN's address
+		// OS build only checks that rootFolderPath is set (otherwise it creates it)
+		url = config.path.CDN_URL + 'dev/' + version + '/';
+		var bufDev = new Buffer('if (typeof Aria=="undefined") Aria={};\nAria.rootFolderPath="' + url + '";\n', 'utf-8');
 		l += bufDev.length;
 	}
 	if (skin) {
-		// console.log('using skin');
-		var bufSkin = new Buffer('document.write(\'<script src="'+ url + '/aria/css/atskin-' + version + '.js"><\/script>\');', 'utf-8');
+		var bufSkin = new Buffer('document.write(\'<script src="'+ url + 'aria/css/atskin-' + version + '.js"><\/script>\');', 'utf-8');
 		l += bufSkin.length;
 	}
-	var bufFix = new Buffer('document.write("<script>aria.core.IO.updateTransports({\'crossDomain\' : \'aria.core.transport.XHR\'});aria.core.DownloadMgr.updateRootMap({\'aria\' : \'' + url + '/\',	\'*\' : \'' + root + '\'});</script>");', 'utf-8');
+	// updateRootMap redirects aria.* packages to the CDN and rootFolderPath is set to whatever was provided or / by default
+	var bufFix = new Buffer('document.write("<script>aria.core.IO.updateTransports({\'crossDomain\':\'aria.core.transport.XHR\'});aria.core.DownloadMgr.updateRootMap({\'aria\':\'' + url + '\'});Aria.rootFolderPath=\'' + root + '\';</script>");', 'utf-8');
 	l += bufFix.length;
 
 	var r = new Buffer(l), offset = 0;
@@ -185,6 +205,7 @@ app.get('/updateconfig', function (req, res) {
 	if (req.ip == '127.0.0.1') {
 		delete require.cache[require.resolve('./cdn.conf')];
 		config = require('./cdn.conf');
+		normalizePaths(config.path);
 		console.log('Configuration reloaded');
 		res.send(200);
 	} else {

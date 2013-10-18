@@ -50,6 +50,7 @@ app.configure(function() {
 	app.use(lowerCaseQuery);
 	app.use('/aria', express.static(__dirname + '/aria'));
 	app.use('/dev', express.static(__dirname + '/dev'));
+	app.use('/css', express.static(__dirname + '/css'));
 	app.use(express.static(__dirname + '/static'));
 	normalizePaths(config.path);
 });
@@ -118,7 +119,6 @@ app.get('/atlatest.js', function (req, res) {
  */
 var getFwk = function (req, res, prefix, version) {
 	var dev = req.query.dev != undefined;
-	var skin = req.query.skin != undefined;
 	var root = '/';
 
 	if (req.query.root) {
@@ -131,7 +131,7 @@ var getFwk = function (req, res, prefix, version) {
 
 	if (cache[filename]) {
 		// console.log('using cache for ' + filename);
-		sendFwk(res, cache[filename], version, dev, skin, root)
+		sendFwk(res, cache[filename], version, dev, req.query.skin, root)
 	} else {
 		var fwkfile = (dev ? config.path.DEV_FWK + version + '/aria/' : config.path.MIN_FWK) + filename;
 		// console.log('looking for ' + fwkfile);
@@ -144,7 +144,7 @@ var getFwk = function (req, res, prefix, version) {
 					}
 					else {
 						cache[filename] = data;
-						sendFwk(res, data, version, dev, skin, root);
+						sendFwk(res, data, version, dev, req.query.skin, root);
 					}
 				});
 			}
@@ -171,8 +171,9 @@ var sendFwk = function (res, content, version, dev, skin, root) {
 		var bufDev = new Buffer('if (typeof Aria=="undefined") Aria={};\nAria.rootFolderPath="' + url + '";\n', 'utf-8');
 		l += bufDev.length;
 	}
-	if (skin) {
-		var bufSkin = new Buffer('document.write(\'<script src="'+ url + 'aria/css/atskin-' + version + '.js"><\/script>\');', 'utf-8');
+	if (skin != undefined) {
+		var skinpath = (skin.length > 0 ? 'css/' + skin : 'aria/css/atskin') + '-';
+		var bufSkin = new Buffer('document.write(\'<script src="'+ url + skinpath + version + '.js"><\/script>\');', 'utf-8');
 		l += bufSkin.length;
 	}
 	// updateRootMap redirects aria.* packages to the CDN and rootFolderPath is set to whatever was provided or / by default
@@ -188,7 +189,7 @@ var sendFwk = function (res, content, version, dev, skin, root) {
 	}
 	content.copy(r, offset);
 	offset += content.length;
-	if (skin) {
+	if (skin != undefined) {
 		bufSkin.copy(r, offset);
 		offset += bufSkin.length;
 	}

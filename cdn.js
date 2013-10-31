@@ -122,7 +122,7 @@ var getFwk = function (req, res, prefix, version) {
 	var root = '/';
 
 	if (req.query.root) {
-		root = escape(req.query.root);
+		root = encodeURI(req.query.root);
 		if (root[root.length-1] != '/') root += '/';
 	}
 
@@ -167,7 +167,7 @@ var sendFwk = function (res, content, version, dev, skin, root) {
 	if (dev) {
 		// 1A build uses rootFolderPath to fetch its primary dependencies so we temporarily set it to the CDN's address
 		// OS build only checks that rootFolderPath is set (otherwise it creates it)
-		url = config.path.CDN_URL + 'dev/' + version + '/';
+		url += 'dev/' + version + '/';
 		var bufDev = new Buffer('if (typeof Aria=="undefined") Aria={};\nAria.rootFolderPath="' + url + '";\n', 'utf-8');
 		l += bufDev.length;
 	}

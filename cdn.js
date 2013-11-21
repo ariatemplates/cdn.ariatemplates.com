@@ -1,19 +1,16 @@
-var SERVER_PORT = 5001;
-
-var ONE_YEAR = 31536000; // one year in s
-var ONE_YEAR_MS = ONE_YEAR * 1000; // one year in ms
-
-var CONF_FILE = './cdn.conf';
+var CONF_FILE = __dirname + '/cdn.conf';
 
 var config = require(CONF_FILE);
 var express = require('express');
 var fs = require('fs');
 
+var ONE_YEAR = 31536000; // one year in s
+var ONE_YEAR_MS = ONE_YEAR * 1000; // one year in ms
+var LATEST_TS = fs.statSync(CONF_FILE).mtime.toUTCString();
+
 var app = express();
 
 var fwkdevcache = {}, fwkcache = {};
-
-var LATEST_TS = fs.statSync(CONF_FILE).mtime.toUTCString();
 
 /*
  * Middleware to allow cross-domain requests
@@ -257,5 +254,5 @@ app.get('*', function(req, res) {
 });
 
 
-app.listen(SERVER_PORT);
-console.log('CDN started on port ' + SERVER_PORT);
+app.listen(config.SERVER_PORT);
+console.log('CDN started on port ' + config.SERVER_PORT);

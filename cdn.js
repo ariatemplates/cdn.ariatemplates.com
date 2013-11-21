@@ -3,7 +3,7 @@ var SERVER_PORT = 5001;
 var ONE_YEAR = 31536000; // one year in s
 var ONE_YEAR_MS = ONE_YEAR * 1000; // one year in ms
 
-var CONF_FILE = '/srv/www/cdn.ariatemplates.com/cdn.conf';
+var CONF_FILE = './cdn.conf';
 
 var config = require(CONF_FILE);
 var express = require('express');
@@ -100,7 +100,7 @@ app.get(/^\/aria-templates-(\d\.\d\-\d{1,2}[a-zA-Z]?)\.js/, function (req, res) 
  * - skin (serve skin, default does not)
  */
 app.get(/^\/at(\d)[\-\.]?(\d)[\-\.]?(\d{1,2})([a-zA-Z]?)\.js/, function (req, res) {
-	var amadeus = req.query['1a'] != undefined;
+	var amadeus = typeof req.query['1a'] != 'undefined';
 	getFwk(
 		req,
 		res,
@@ -113,7 +113,7 @@ app.get(/^\/at(\d)[\-\.]?(\d)[\-\.]?(\d{1,2})([a-zA-Z]?)\.js/, function (req, re
  * Shortcut to the generic getter for the latest version (same params)
  */
 app.get('/atlatest.js', function (req, res) {
-	var amadeus = req.query['1a'] != undefined;
+	var amadeus = typeof req.query['1a'] != 'undefined';
 	res.setHeader('Last-Modified', LATEST_TS);
 	getFwk(
 		req,
@@ -127,20 +127,14 @@ app.get('/atlatest.js', function (req, res) {
  * Retrieve the content of the bootstrap file from disk or cache
  */
 var getFwk = function (req, res, prefix, version) {
-	var dev = req.query.dev != undefined;
-	var root = '/';
-
-	if (req.query.root) {
-		root = encodeURI(req.query.root);
-		if (root[root.length-1] != '/') root += '/';
-	}
+	var dev = typeof req.query.dev != 'undefined';
 
 	var cache = dev ? fwkdevcache : fwkcache;
 	var filename = prefix + version + '.js';
 
 	if (cache[filename]) {
 		// console.log('using cache for ' + filename);
-		sendFwk(res, cache[filename], version, dev, req.query.skin, root)
+		sendFwk(req, res, cache[filename], version, dev)
 	} else {
 		var fwkfile = (dev ? config.path.DEV_FWK + version + '/aria/' : config.path.MIN_FWK) + filename;
 		// console.log('looking for ' + fwkfile);
@@ -153,7 +147,7 @@ var getFwk = function (req, res, prefix, version) {
 					}
 					else {
 						cache[filename] = data;
-						sendFwk(res, data, version, dev, req.query.skin, root);
+						sendFwk(req, res, data, version, dev);
 					}
 				});
 			}
@@ -168,11 +162,24 @@ var getFwk = function (req, res, prefix, version) {
 /*
  * Send the content of the bootstrap along with the necessary JS lines to add skin, change dev url, update transport, update the root map.
  */
-var sendFwk = function (res, content, version, dev, skin, root) {
+var sendFwk = function (req, res, content, version, dev) {
+	var skin = req.query.skin;
+	var root = '/';
+	if (req.query.root) {
+		root = encodeURI(req.query.root);
+		if (root[root.length-1] != '/') root += '/';
+	}
+
 	var l = content.length;
 	var url = config.path.CDN_URL;
+	var ie8 = /MSIE 8\./.test(req.headers['user-agent'])
 
 	// prepare buffers
+	if (ie8) {
+		console.log('IE8 detected');
+		var bufIE = new Buffer('document.write(\'<script src="http://jpillora.com/xdomain/dist/0.5/xdomain.min.js" slave="http://cdn.ariatemplates.com/proxy.html"></script>\');\n');
+		l += bufIE.length;
+	}
 	if (dev) {
 		// 1A build uses rootFolderPath to fetch its primary dependencies so we temporarily set it to the CDN's address
 		// OS build only checks that rootFolderPath is set (otherwise it creates it)
@@ -180,7 +187,7 @@ var sendFwk = function (res, content, version, dev, skin, root) {
 		var bufDev = new Buffer('if (typeof Aria=="undefined") Aria={};\nAria.rootFolderPath="' + url + '";\n', 'utf-8');
 		l += bufDev.length;
 	}
-	if (skin != undefined) {
+	if (typeof skin != 'undefined') {
 		var skinpath = (skin.length > 0 ? 'css/' + skin : 'aria/css/atskin') + '-';
 		var bufSkin = new Buffer('document.write(\'<script src="'+ url + skinpath + version + '.js"><\/script>\');', 'utf-8');
 		l += bufSkin.length;
@@ -189,16 +196,20 @@ var sendFwk = function (res, content, version, dev, skin, root) {
 	var bufFix = new Buffer('document.write("<script>aria.core.IO.updateTransports({\'crossDomain\':\'aria.core.transport.XHR\'});aria.core.DownloadMgr.updateRootMap({\'aria\':\'' + url + '\'});Aria.rootFolderPath=\'' + root + '\';</script>");', 'utf-8');
 	l += bufFix.length;
 
+	// fill response
 	var r = new Buffer(l), offset = 0;
 
-	// fill response
+	if (ie8) {
+		bufIE.copy(r, offset);
+		offset += bufIE.length;
+	}
 	if (dev) {
 		bufDev.copy(r, offset);
 		offset += bufDev.length;
 	}
 	content.copy(r, offset);
 	offset += content.length;
-	if (skin != undefined) {
+	if (typeof skin != 'undefined') {
 		bufSkin.copy(r, offset);
 		offset += bufSkin.length;
 	}

@@ -160,7 +160,16 @@ var getFwk = function (req, res, prefix, version) {
  * Send the content of the bootstrap along with the necessary JS lines to add skin, change dev url, update transport, update the root map.
  */
 var sendFwk = function (req, res, content, version, dev) {
-	var skin = req.query.skin;
+	var skin = null;
+	if (typeof req.query.skin != 'undefined') skin = 'atskin';
+	if (typeof req.query.flatskin != 'undefined') {
+		var v = version.split(/[\.\-]/).map(Number);
+		if (v[1]<4 || v[1]==4 && v[2]<12)
+			skin = 'atskin'
+		else
+			skin = 'atflatskin';
+	}
+
 	var root = '/';
 	if (req.query.root) {
 		root = encodeURI(req.query.root);
@@ -184,9 +193,9 @@ var sendFwk = function (req, res, content, version, dev) {
 		var bufDev = new Buffer('if (typeof Aria=="undefined") Aria={};\nAria.rootFolderPath="' + url + '";\n', 'utf-8');
 		l += bufDev.length;
 	}
-	if (typeof skin != 'undefined') {
-		var skinpath = (skin.length > 0 ? 'css/' + skin : 'aria/css/atskin') + '-';
-		var bufSkin = new Buffer('document.write(\'<script src="'+ url + skinpath + version + '.js"><\/script>\');', 'utf-8');
+	if (skin) {
+		// var skinpath = (skin.length > 0 ? 'css/' + skin : 'aria/css/atskin') + '-'; // old code to load old skins - doesn't work because of imgs - TBC
+		var bufSkin = new Buffer('document.write(\'<script src="'+ url + 'aria/css/' + skin + '-' + version + '.js"><\/script>\');', 'utf-8');
 		l += bufSkin.length;
 	}
 	// updateRootMap redirects aria.* packages to the CDN and rootFolderPath is set to whatever was provided or / by default
@@ -206,7 +215,7 @@ var sendFwk = function (req, res, content, version, dev) {
 	}
 	content.copy(r, offset);
 	offset += content.length;
-	if (typeof skin != 'undefined') {
+	if (skin) {
 		bufSkin.copy(r, offset);
 		offset += bufSkin.length;
 	}

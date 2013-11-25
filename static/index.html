@@ -16,11 +16,11 @@
 		<p>Where:</p>
 		<p><span class="code option">version</span> is the version label of the framework, using either dots or dashes, or <span class="code">latest</span> to get the latest build available.</p>
 		<p><span class="code option">params</span> contains optional parameters of the following list:</p>
-		<dl>
-			<dt><span class="code">skin</span></dt><dd>to request the Aria skin</dd>
-			<dt><span class="code">dev</span></dt><dd>to fetch unminified files.</dd>
-			<dt><span class="code">root</span></dt><dd>to set a specific rootMap (i.e. the URL root used to resolve classpaths) which by default is the root of your webapp.</dd>
-		</dl>
+		<ul>
+			<li><span class="code">skin</span> or <span class="code">flatskin</span> to request the Aria skin.
+			<li><span class="code">dev</span> to fetch unminified files.
+			<li><span class="code">root</span> to set the <a href="http://ariatemplates.com/usermanual/latest/javascript_classes#$classpath">rootFolderPath</a> (defaults to the root of your webapp.)
+		</ul>
 
 		<h1>Examples</h1>
 		<div class="term code">&lt;script src="http://cdn.ariatemplates.com/<span class="option">at1.4.9.js</span>"&gt;&lt;/script&gt;</div>
@@ -33,6 +33,9 @@
 		<h1>Disclaimer</h1>
 		<p class="warn">IE7 is not (and never will be) supported, IE8+ should be fine.  Save teh interwebs, use a modern browser.</p>
 		<p class="warn">This CDN is intended for prototyping and development purposes only.  <strong>Do not use in production</strong>.</p>
+
+		<h1>Contact</h1>
+		<p>If you have questions or want to report an issue, please head to <a href="http://ariatemplates.com/forum/showthread.php?tid=94">the dedicated thread in our forum</a>.</p>
 
 	</body>
 </html>

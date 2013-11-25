@@ -22,14 +22,8 @@ h1 {
 .option {
 	color: #6bdcff;
 }
-dt {
-	color: #666;
-	display: list-item;
-	float: left;
-	margin-left: 70px;
-}
-dd {
-	margin: 0 0 10px 120px;
+li {
+	margin: 0 0 10px 30px;
 }
 .warn {
 	background: #fcffb7;

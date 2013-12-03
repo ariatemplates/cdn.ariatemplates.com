@@ -152,7 +152,7 @@ var getFwk = function (req, res, prefix, version) {
 				console.log('file ' + fwkfile + ' not found');
 				res.status(404).sendfile(__dirname + '/static/404.html');
 			}
-		});		
+		});
 	}
 };
 
@@ -178,11 +178,10 @@ var sendFwk = function (req, res, content, version, dev) {
 
 	var l = content.length;
 	var url = config.path.CDN_URL;
-	var ie8 = /MSIE 8\./.test(req.headers['user-agent'])
+	var wtf = /MSIE [89]\./.test(req.headers['user-agent'])
 
 	// prepare buffers
-	if (ie8) {
-		console.log('IE8 detected');
+	if (wtf) {
 		var bufIE = new Buffer('document.write(\'<script src="http://jpillora.com/xdomain/dist/0.5/xdomain.min.js" slave="http://cdn.ariatemplates.com/proxy.html"></script>\');\n');
 		l += bufIE.length;
 	}
@@ -205,7 +204,7 @@ var sendFwk = function (req, res, content, version, dev) {
 	// fill response
 	var r = new Buffer(l), offset = 0;
 
-	if (ie8) {
+	if (wtf) {
 		bufIE.copy(r, offset);
 		offset += bufIE.length;
 	}

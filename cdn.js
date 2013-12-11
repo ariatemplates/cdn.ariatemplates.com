@@ -57,6 +57,9 @@ app.configure(function() {
 	app.use('/dev', express.static(__dirname + '/dev', {maxAge: ONE_YEAR_MS}));
 	app.use('/css', express.static(__dirname + '/css', {maxAge: ONE_YEAR_MS}));
 	app.use(express.static(__dirname + '/static', {maxAge: ONE_YEAR_MS}));
+	app.use('/aria', express.directory(__dirname + '/aria', {icons:true}));
+	app.use('/dev', express.directory(__dirname + '/dev', {icons:true}));
+	app.use('/css', express.directory(__dirname + '/css', {icons:true}));
 	normalizePaths(config.path);
 });
 
@@ -178,12 +181,12 @@ var sendFwk = function (req, res, content, version, dev) {
 
 	var l = content.length;
 	var url = config.path.CDN_URL;
-	var wtf = /MSIE [89]\./.test(req.headers['user-agent'])
+	var nocors = /MSIE [89]\./.test(req.headers['user-agent']) || (typeof req.query.nocors != 'undefined');
 
 	// prepare buffers
-	if (wtf) {
-		var bufIE = new Buffer('document.write(\'<script src="http://jpillora.com/xdomain/dist/0.5/xdomain.min.js" slave="http://cdn.ariatemplates.com/proxy.html"></script>\');\n');
-		l += bufIE.length;
+	if (nocors) {
+		var bufNocors = new Buffer('document.write(\'<script src="http://jpillora.com/xdomain/dist/0.5/xdomain.min.js" slave="' + url + 'proxy.html"></script>\');\n');
+		l += bufNocors.length;
 	}
 	if (dev) {
 		// 1A build uses rootFolderPath to fetch its primary dependencies so we temporarily set it to the CDN's address
@@ -198,15 +201,15 @@ var sendFwk = function (req, res, content, version, dev) {
 		l += bufSkin.length;
 	}
 	// updateRootMap redirects aria.* packages to the CDN and rootFolderPath is set to whatever was provided or / by default
-	var bufFix = new Buffer('document.write("<script>aria.core.IO.updateTransports({\'crossDomain\':\'aria.core.transport.XHR\'});aria.core.DownloadMgr.updateRootMap({\'aria\':\'' + url + '\'});Aria.rootFolderPath=\'' + root + '\';</script>");', 'utf-8');
+	var bufFix = new Buffer('document.write("<script>aria.core.IO.useXHRHeader=false;aria.core.IO.updateTransports({\'crossDomain\':\'aria.core.transport.XHR\'});aria.core.DownloadMgr.updateRootMap({\'aria\':\'' + url + '\'});Aria.rootFolderPath=\'' + root + '\';</script>");', 'utf-8');
 	l += bufFix.length;
 
 	// fill response
 	var r = new Buffer(l), offset = 0;
 
-	if (wtf) {
-		bufIE.copy(r, offset);
-		offset += bufIE.length;
+	if (nocors) {
+		bufNocors.copy(r, offset);
+		offset += bufNocors.length;
 	}
 	if (dev) {
 		bufDev.copy(r, offset);

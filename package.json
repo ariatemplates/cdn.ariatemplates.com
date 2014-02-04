@@ -7,7 +7,8 @@
 		"url": "git://github.com/ariatemplates/cdn.ariatemplates.com.git"
 	},
 	"dependencies" : {
-		"express" : ">=3.4.0"
+		"express" : ">=3.4.0",
+		"glob" : ">=3.2.8"
 	},
 	"private" : true
 }

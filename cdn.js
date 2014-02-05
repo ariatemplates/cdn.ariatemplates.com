@@ -148,6 +148,12 @@ app.get('/versions', function (req, res) {
 	res.jsonp(versions);
 });
 
+app.get('/', function (req, res) {
+	res.header('Cache-Control', 'public, max-age=' + ONE_YEAR);
+	res.setHeader('Last-Modified', utils.config.LATEST_TS);
+	res.sendfile(__dirname + '/index.html');
+});
+
 /*
  * Anything that hasn't been routed at this point is a 404
  */

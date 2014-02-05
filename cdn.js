@@ -114,7 +114,7 @@ app.get('/atlatest.js', function (req, res) {
 		req,
 		res,
 		amadeus ? 'aria-templates-' : 'ariatemplates-', // prefix
-		utils.config.LATEST.substr(0,1) + '.' + utils.config.LATEST.substr(1,1) + (amadeus ? '-' : '.') + utils.config.LATEST.substr(2), // version
+		utils.config.LATEST[0] + '.' + utils.config.LATEST[1] + (amadeus ? '-' : '.') + utils.config.LATEST.substr(2), // version
 		ONE_YEAR
 	);
 })
@@ -124,7 +124,7 @@ app.get('/atlatest.js', function (req, res) {
  */
 app.get('/updateconfig', function (req, res) {
 	if (req.ip == '127.0.0.1') {
-		utils.loadConfig(CONF_FILE, true, function() {
+		utils.loadConfig(CONF_FILE, function() {
 			console.log('Configuration reloaded');
 			res.send(200);
 		});
@@ -139,13 +139,13 @@ app.get('/updateconfig', function (req, res) {
  */
 app.get('/versions', function (req, res) {
 	var versions = {
-		min : utils.config.OLDEST,
-		max : utils.config.LATEST
+		'min' : utils.config.OLDEST,
+		'max' : utils.config.LATEST
 	};
-	res.header('Content-Type', 'application/json');
+	res.type('application/json');
 	res.header('Cache-Control', 'public, max-age=' + ONE_YEAR);
 	res.setHeader('Last-Modified', utils.config.LATEST_TS);
-	res.send(versions);
+	res.jsonp(versions);
 });
 
 /*
@@ -155,7 +155,7 @@ app.get('*', function(req, res) {
 	res.status(404).sendfile(__dirname + '/static/404.html');
 });
 
-utils.loadConfig(CONF_FILE, false, function() {
+utils.loadConfig(CONF_FILE, function() {
 	app.listen(utils.config.file.SERVER_PORT);
 	console.log('CDN started on port ' + utils.config.file.SERVER_PORT);
 });

@@ -4,6 +4,16 @@
 		<link rel="stylesheet" href="http://ariatemplates.com/styles/webfonts.css" type="text/css"/>
 		<title>Aria Templates CDN</title>
 		<link rel="stylesheet" href="/cdn.css" type="text/css"/>
+		<script>
+			var versions;
+			function setver(v) {
+				versions = {
+					min : v.min[0] + '.' + v.min[1] + '.' + v.min.substr(2),
+					max : v.max[0] + '.' + v.max[1] + '.' + v.max.substr(2)
+				};
+			}
+		</script>
+		<script src="http://cdn.ariatemplates.com/versions?callback=setver"></script>
 	</head>
 
 	<body>
@@ -29,7 +39,7 @@
 		<div class="term code">&lt;script src="http://cdn.ariatemplates.com/<span class="option">at1.4-2.js?dev&skin&root=.</span>"&gt;&lt;/script&gt;</div>
 
 		<h1>Versions</h1>
-		<p>Currently serving versions <strong>1.4.2</strong> to <strong>1.4.13</strong>.  Use <a href="http://cdn.ariatemplates.com/versions">http://cdn.ariatemplates.com/versions</a> to get the min/max versions served as JSON.</p>
+		<p>Currently serving versions <script>document.write('<strong>' + versions.min + '</strong> to <strong>' + versions.max + '</strong>')</script>.  Use <a href="http://cdn.ariatemplates.com/versions">http://cdn.ariatemplates.com/versions</a> to get the min/max versions served as JSON.</p>
 
 		<h1>Disclaimer</h1>
 		<p class="warn">IE7 is not (and never will be) supported, IE8+ should be fine.  Save teh interwebs, use a modern browser.</p>

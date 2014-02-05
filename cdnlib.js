@@ -112,14 +112,10 @@ var sendFwk = function (req, res, content, version, dev, expire) {
 /*
  * Reloads a configuration file into the configuration object, sets timestamp and determine OLDEST/LATEST versions
  */
-var loadConfig = function(file, reload, cb) {
-	var timestamp;
-	if (reload) {
-		delete require.cache[require.resolve(file)];
-		timestamp = (new Date()).toUTCString();
-	}
-	else {
-		timestamp = fs.statSync(file).mtime.toUTCString();
+var loadConfig = function(file, cb) {
+	var rs = require.resolve(file);
+	if (rs) {
+		delete require.cache[rs];
 	}
 	config.file = require(file);
 	// make sure each path in the array has a trailing /
@@ -127,7 +123,7 @@ var loadConfig = function(file, reload, cb) {
 	for (var p in paths) {
 		if (paths[p].substr(-1) != '/') paths[p] += '/';
 	}
-	config.LATEST_TS = timestamp;
+	config.LATEST_TS = (new Date()).toUTCString();
 	// listing files from the OS version to avoid patches
 	glob(__dirname + '/aria/ariatemplates\-*.js', null, function (er, files) {
 		var versions = files.map(function(filename) {

@@ -1,5 +1,5 @@
-aria/
-css/
+aria
+css
 node_modules/
 logs/
-dev/
+dev

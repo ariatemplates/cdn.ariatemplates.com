@@ -81,7 +81,7 @@ var sendFwk = function (req, res, content, version, dev, expire) {
 		l += bufSkin.length;
 	}
 	// updateRootMap redirects aria.* packages to the CDN and rootFolderPath is set to whatever was provided or / by default
-	var bufFix = new Buffer('document.write("<script>aria.core.IO.useXHRHeader=false;aria.core.IO.updateTransports({\'crossDomain\':\'aria.core.transport.XHR\'});aria.core.DownloadMgr.updateRootMap({\'aria\':\'' + url + '\'});Aria.rootFolderPath=\'' + root + '\';</script>");', 'utf-8');
+	var bufFix = new Buffer('document.write("<script>delete aria.core.IO.headers[\'X-Requested-With\'];aria.core.IO.useXHRHeader=false;aria.core.IO.updateTransports({\'crossDomain\':\'aria.core.transport.XHR\'});aria.core.DownloadMgr.updateRootMap({\'aria\':\'' + url + '\'});Aria.rootFolderPath=\'' + root + '\';</script>");', 'utf-8');
 	l += bufFix.length;
 
 	// fill response

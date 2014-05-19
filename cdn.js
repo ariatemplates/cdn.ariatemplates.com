@@ -60,26 +60,26 @@ app.configure(function() {
 /*
  * Open-source build getter
  *
- * /ariatemplates-<x.y.z>.js[?<params>]
+ * /ariatemplates-<x.y.z[-beta.b]>.js[?<params>]
  *
  * params:
  * - dev  (dev build, default to minified)
  * - skin (serve skin, default does not)
  */
-app.get(/^\/ariatemplates-(\d\.\d\.\d{1,2})\.js/, function (req, res) {
+app.get(/^\/ariatemplates-(\d\.\d\.\d{1,2}(?:-beta\.\d)?)\.js/i, function (req, res) {
 	utils.getFwk(req, res, 'ariatemplates-', req.params[0], ONE_YEAR);
 });
 
 /*
  * Amadeus build getter
  *
- * /aria-tamplates-<x.y-z[p]>.js[?<params>]
+ * /aria-tamplates-<x.y[beta-ptr]-z[p]>.js[?<params>]
  *
  * params:
  * - dev  (dev build, default to minified)
  * - skin (serve skin, default does not)
  */
-app.get(/^\/aria-templates-(\d\.\d\-\d{1,2}[a-zA-Z]?)\.js/, function (req, res) {
+app.get(/^\/aria-templates-(\d\.\d(?:beta-\d{7,8})?-\d{1,2}[a-zA-Z]?)\.js/i, function (req, res) {
 	utils.getFwk(req, res, 'aria-templates-', req.params[0], ONE_YEAR);
 });
 
@@ -93,13 +93,19 @@ app.get(/^\/aria-templates-(\d\.\d\-\d{1,2}[a-zA-Z]?)\.js/, function (req, res) 
  * - dev  (dev build, default to minified)
  * - skin (serve skin, default does not)
  */
-app.get(/^\/at(\d)[\-\.]?(\d)[\-\.]?(\d{1,2})([a-zA-Z]?)\.js/, function (req, res) {
+app.get(/^\/at(\d)[\-\.]?(\d)(?:beta-?(\d{7,8}))?[\-\.]?(\d{1,2})(?:([a-zA-Z])|-?beta\.?(\d))?\.js/i, function (req, res) {
 	var amadeus = typeof req.query['1a'] != 'undefined';
+	// version
+	var v = req.params[0] + '.' + req.params[1];
+	if (req.params[2]) v += 'BETA-' + req.params[2];
+	v += (amadeus ? '-' : '.') + req.params[3];
+	if (req.params[4]) v += req.params[4];
+	if (req.params[5]) v += '-beta.' + req.params[5];
 	utils.getFwk(
 		req,
 		res,
 		amadeus ? 'aria-templates-' : 'ariatemplates-', // prefix
-		req.params[0] + '.' + req.params[1] + (amadeus ? '-' : '.') + req.params[2] + req.params[3], // version
+		v,
 		ONE_YEAR
 	);
 });

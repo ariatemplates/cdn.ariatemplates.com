@@ -134,9 +134,6 @@ var loadConfig = function(file, cb) {
 		var sortedVersions = versions.sort(); // alphabetical sort will do fine
 		config.OLDEST = sortedVersions[0].replace(/0(\d)$/, '$1');
 		config.LATEST = sortedVersions[sortedVersions.length - 1].replace(/0(\d)$/, '$1');
-
-		console.log('*** ' + config.LATEST)
-
 		cb.call(this);
 	})
 };

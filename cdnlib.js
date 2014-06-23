@@ -48,15 +48,17 @@ var sendFwk = function (req, res, content, version, dev, expire) {
 	if (typeof req.query.flatskin != 'undefined') {
 		var v = version.split(/[\.\-]/).map(Number);
 		if (v[1] < 4 || v[1] == 4 && v[2] < 12)
-			skin = 'atskin'
+			skin = 'atskin';
 		else
 			skin = 'atflatskin';
 	}
-
-	var root = '/';
+	// the root param overrides any other rootFolderPath; otherwise, we keep a copy of a potentially defined one
+	var keeproot = true;
+	var root = 'window.__rfpBackup__?__rfpBackup__:"/"';
 	if (req.query.root) {
 		root = encodeURI(req.query.root);
 		if (root[root.length-1] != '/') root += '/';
+		keeproot = false;
 	}
 
 	var l = content.length;
@@ -65,8 +67,12 @@ var sendFwk = function (req, res, content, version, dev, expire) {
 
 	// prepare buffers
 	if (nocors) {
-		var bufNocors = new Buffer('document.write(\'<script src="http://jpillora.com/xdomain/dist/0.5/xdomain.min.js" slave="' + url + 'proxy.html"></script>\');\n');
+		var bufNocors = new Buffer('document.write(\'<script src="http://jpillora.com/xdomain/dist/0.5/xdomain.min.js" slave="' + url + 'proxy.html"><\/script>\');\n');
 		l += bufNocors.length;
+	}
+	if (keeproot) {
+		var bufRfp = new Buffer('if (window.Aria && Aria.rootFolderPath) __rfpBackup__=Aria.rootFolderPath;\n', 'utf-8');
+		l += bufRfp.length;
 	}
 	if (dev) {
 		// 1A build uses rootFolderPath to fetch its primary dependencies so we temporarily set it to the CDN's address
@@ -81,7 +87,7 @@ var sendFwk = function (req, res, content, version, dev, expire) {
 		l += bufSkin.length;
 	}
 	// updateRootMap redirects aria.* packages to the CDN and rootFolderPath is set to whatever was provided or / by default
-	var bufFix = new Buffer('document.write("<script>delete aria.core.IO.headers[\'X-Requested-With\'];aria.core.IO.useXHRHeader=false;aria.core.IO.updateTransports({\'crossDomain\':\'aria.core.transport.XHR\'});aria.core.DownloadMgr.updateRootMap({\'aria\':\'' + url + '\'});Aria.rootFolderPath=\'' + root + '\';</script>");', 'utf-8');
+	var bufFix = new Buffer('document.write(\'<script>delete aria.core.IO.headers["X-Requested-With"];aria.core.IO.useXHRHeader=false;aria.core.IO.updateTransports({"crossDomain":"aria.core.transport.XHR"});aria.core.DownloadMgr.updateRootMap({"aria":"' + url + '"});Aria.rootFolderPath=' + root + ';<\/script>\');', 'utf-8');
 	l += bufFix.length;
 
 	// fill response
@@ -90,6 +96,10 @@ var sendFwk = function (req, res, content, version, dev, expire) {
 	if (nocors) {
 		bufNocors.copy(r, offset);
 		offset += bufNocors.length;
+	}
+	if (keeproot) {
+		bufRfp.copy(r, offset);
+		offset += bufRfp.length;
 	}
 	if (dev) {
 		bufDev.copy(r, offset);

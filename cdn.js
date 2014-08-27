@@ -1,5 +1,5 @@
 /* DISCLAIMER
- * 
+ *
  * Parts of the code in this file dealing with version numbers
  * take the assumption that they're formatted as d.d.[d]d and
  * will NOT work if the major/medium has more than one digit.
@@ -44,18 +44,16 @@ var lowerCaseQuery = function (req, res, next) {
 /*
  * App environments configuration
  */
-app.configure(function() {
-	app.use(express.compress()); // gzip
-	app.use(allowCrossDomain);
-	app.use(lowerCaseQuery);
-	app.use('/aria', express.static(__dirname + '/aria', {maxAge: ONE_YEAR_MS}));
-	app.use('/dev', express.static(__dirname + '/dev', {maxAge: ONE_YEAR_MS}));
-	app.use('/css', express.static(__dirname + '/css', {maxAge: ONE_YEAR_MS}));
-	app.use(express.static(__dirname + '/static', {maxAge: ONE_YEAR_MS}));
-	app.use('/aria', express.directory(__dirname + '/aria', {icons:true}));
-	app.use('/dev', express.directory(__dirname + '/dev', {icons:true}));
-	app.use('/css', express.directory(__dirname + '/css', {icons:true}));
-});
+app.use(express.compress()); // gzip
+app.use(allowCrossDomain);
+app.use(lowerCaseQuery);
+app.use('/aria', express.static(__dirname + '/aria', {maxAge: ONE_YEAR_MS}));
+app.use('/dev', express.static(__dirname + '/dev', {maxAge: ONE_YEAR_MS}));
+app.use('/css', express.static(__dirname + '/css', {maxAge: ONE_YEAR_MS}));
+app.use(express.static(__dirname + '/static', {maxAge: ONE_YEAR_MS}));
+app.use('/aria', express.directory(__dirname + '/aria', {icons:true}));
+app.use('/dev', express.directory(__dirname + '/dev', {icons:true}));
+app.use('/css', express.directory(__dirname + '/css', {icons:true}));
 
 /*
  * Open-source build getter

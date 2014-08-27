@@ -144,7 +144,8 @@ app.get('/updateconfig', function (req, res) {
 app.get('/versions', function (req, res) {
 	var versions = {
 		'min' : utils.config.OLDEST,
-		'max' : utils.config.LATEST
+		'max' : utils.config.LATEST,
+		'list' : utils.config.VERSIONS
 	};
 	res.type('application/json');
 	res.header('Cache-Control', 'public, max-age=' + ONE_YEAR);

@@ -109,6 +109,10 @@ var sendFwk = function (req, res, content, version, dev, expire) {
 	res.send(r);
 }
 
+var formatVersion = function (version) {
+	return version.replace(/0(\d)$/, '$1');
+};
+
 /*
  * Reloads a configuration file into the configuration object, sets timestamp and determine OLDEST/LATEST versions
  */
@@ -126,14 +130,16 @@ var loadConfig = function(file, cb) {
 	config.LATEST_TS = (new Date()).toUTCString();
 	// listing files from the OS version to avoid patches
 	glob(__dirname + '/aria/ariatemplates\-*.js', null, function (er, files) {
-    var versions = [];
-    files.forEach(function(f){
+		var versions = [];
+		files.forEach(function(f){
  			var v = /\/ariatemplates-(\d)\.(\d)\.(\d{1,2})\.js$/.exec(f);
 			if (v) versions.push(v[1] + v[2] + (0 + v[3]).slice(-2)); // ariatemplates-a.b.c.js > ab[0]c
-    });
+		});
 		var sortedVersions = versions.sort(); // alphabetical sort will do fine
-		config.OLDEST = sortedVersions[0].replace(/0(\d)$/, '$1');
-		config.LATEST = sortedVersions[sortedVersions.length - 1].replace(/0(\d)$/, '$1');
+		config.VERSIONS = sortedVersions.map(formatVersion);
+		config.OLDEST = config.VERSIONS[0];
+		config.LATEST = config.VERSIONS[config.VERSIONS.length - 1];
+
 		cb.call(this);
 	})
 };

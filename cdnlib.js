@@ -33,7 +33,7 @@ var getFwk = function (req, res, prefix, version, expire) {
 			}
 			else {
 				console.log('file ' + fwkfile + ' not found');
-				res.status(404).sendfile(__dirname + '/static/404.html');
+				res.status(404).sendFile(__dirname + '/static/404.html');
 			}
 		});
 	}

@@ -82,7 +82,7 @@ app.get(/^\/ariatemplates-(\d\.\d\.\d{1,2}(?:-beta\.\d)?)\.js/i, function (req, 
  * - dev  (dev build, default to minified)
  * - skin (serve skin, default does not)
  */
-app.get(/^\/aria-templates-(\d\.\d(?:beta-\d{7,8})?-\d{1,2}[a-zA-Z]?)\.js/i, function (req, res) {
+app.get(/^\/aria-templates-(\d\.\d(?:beta-\d{7,8})?[\-\.]\d{1,2}[a-zA-Z]?)\.js/i, function (req, res) {
 	utils.getFwk(req, res, 'aria-templates-', req.params[0], ONE_YEAR);
 });
 
@@ -101,7 +101,8 @@ app.get(/^\/at(\d)[\-\.]?(\d)(?:beta-?(\d{7,8}))?[\-\.]?(\d{1,2})(?:([a-zA-Z])|-
 	// version
 	var v = req.params[0] + '.' + req.params[1];
 	if (req.params[2]) v += 'BETA-' + req.params[2];
-	v += (amadeus ? '-' : '.') + req.params[3];
+	v += (amadeus && req.params[0] == 1 && req.params[1] < 7) ? '-' : '.';
+	v += req.params[3];
 	if (req.params[4]) v += req.params[4];
 	if (req.params[5]) v += '-beta.' + req.params[5];
 	utils.getFwk(
@@ -123,7 +124,7 @@ app.get('/atlatest.js', function (req, res) {
 		req,
 		res,
 		amadeus ? 'aria-templates-' : 'ariatemplates-', // prefix
-		utils.config.LATEST[0] + '.' + utils.config.LATEST[1] + (amadeus ? '-' : '.') + utils.config.LATEST.substr(2), // version
+		utils.config.LATEST[0] + '.' + utils.config.LATEST[1] + '.' + utils.config.LATEST.substr(2), // version
 		ONE_YEAR
 	);
 })
@@ -161,14 +162,14 @@ app.get('/versions', function (req, res) {
 app.get('/', function (req, res) {
 	res.header('Cache-Control', 'public, max-age=' + ONE_YEAR);
 	res.setHeader('Last-Modified', utils.config.LATEST_TS);
-	res.sendfile(__dirname + '/index.html');
+	res.sendFile(__dirname + '/index.html');
 });
 
 /*
  * Anything that hasn't been routed at this point is a 404
  */
 app.get('*', function(req, res) {
-	res.status(404).sendfile(__dirname + '/static/404.html');
+	res.status(404).sendFile(__dirname + '/static/404.html');
 });
 
 utils.loadConfig(CONF_FILE, function() {

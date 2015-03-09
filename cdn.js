@@ -29,7 +29,7 @@ var allowCrossDomain = function (req, res, next) {
 	res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
 	res.header('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
 	if (req.method == 'OPTIONS') {
-		res.send(200);
+		res.sendStatus(200);
 	}
 	else {
 		next();
@@ -136,11 +136,11 @@ app.get('/updateconfig', function (req, res) {
 	if (req.ip == '127.0.0.1') {
 		utils.loadConfig(CONF_FILE, function() {
 			console.log('Configuration reloaded');
-			res.send(200);
+			res.sendStatus(200);
 		});
 	} else {
 		console.log('Remote attempt at updating the configuration from ' + req.ip);
-		res.send(404);
+		res.sendStatus(404);
 	}
 });
 
